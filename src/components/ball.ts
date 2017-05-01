@@ -43,7 +43,6 @@ function ball(sources: BallSources) {
       else
         return R.over(R.lensProp('dir'), R.subtract(Math.PI))  
     })
-  // .mapTo(R.over(R.lensProp('dir'), R.negate))
 
   const state$ = xs.merge(move$, rotate$)
     .fold((state, reducer: Reducer<BallState>) => reducer(state), sources.props)
