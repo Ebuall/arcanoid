@@ -10,14 +10,14 @@ function view([x, y]: Coord) {
     background: 'red',
     borderRadius: '50%',
     height: '20px',
-    position: 'absolute',
+    position: 'relative',
     width: '20px',
   })
   return div('.' + className, {
     hook: {
       update: (v: VNode) => {
         const elem = v.elm as HTMLElement
-        elem.style.top = y + 'px'
+        elem.style.bottom = y + 'px'
         elem.style.left = x + 'px'
       }
     }
@@ -28,7 +28,7 @@ function ball(sources: BallSources) {
   function move(state: BallState): BallState {
     const newPos: Coord = [
       state.pos[0] + state.speed * Math.cos(state.dir),
-      state.pos[1] - state.speed * Math.sin(state.dir)
+      state.pos[1] + state.speed * Math.sin(state.dir)
     ]
     return R.assoc('pos', newPos, state)
   }
