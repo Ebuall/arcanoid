@@ -10,8 +10,9 @@ function view([x, y]: Coord) {
     background: 'red',
     borderRadius: '50%',
     height: '20px',
-    position: 'relative',
+    position: 'absolute',
     width: '20px',
+    zIndex: 1,
   })
   return div('.' + className, {
     hook: {
@@ -40,8 +41,10 @@ function ball(sources: BallSources) {
     .map(({ dir }) => {
       if (dir == 'top' || dir == 'bottom')
         return R.over(R.lensProp('dir'), R.negate)
+      else if (dir == 'right')
+        return R.over(R.lensProp('dir'), R.subtract(Math.PI))
       else
-        return R.over(R.lensProp('dir'), R.subtract(Math.PI))  
+        return R.over(R.lensProp('dir'), R.subtract(-Math.PI))
     })
 
   const state$ = xs.merge(move$, rotate$)
