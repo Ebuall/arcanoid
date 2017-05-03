@@ -26,20 +26,27 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
   const ballProps = {
     pos: [240, dy],
     dir: Math.PI / 4,
-    speed: 15
+    speed: 5
   }
+
+  const keys = (key: string, event = 'keypress') =>
+    sources.DOM.select('document').events(event)
+      .filter(R.propEq('code', key))
 
   const mouse$ = sources.DOM.select('.' + boardClass).events('mousemove')
     .map((ev: MouseEvent) => [ev.clientX - 13, 513 - ev.clientY])
     .startWith([0, 0])
 
-  const pause$ = sources.DOM.select('document').events('keypress')
-    .filter(R.propEq('code', 'Space'))
+
+  const reset$ = keys('Escape', 'keyup')
+  const pause$ = xs.merge(keys('Space'), reset$)
     .fold(R.not, true)
 
-  const reset$ = sources.DOM.select('document').events('keyup')
-    .filter(R.propEq('code', 'Escape'))
-    .startWith(null)
+  const accelerate$ = keys('KeyA')
+    .mapTo(R.over(R.lensProp('speed'), R.inc))
+
+  const slowDown$ = keys('KeyS')
+    .mapTo(R.over(R.lensProp('speed'), R.dec))
 
   const offset = (v: number) => Math.abs(v - 240)
   const borderColl = (x: number, y: number) => {
@@ -85,7 +92,8 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
     const [cx1, cy1] = findCenter([x1, y2], ballRadius)
     const cx2 = x2 + blockWidth / 2
     const cy2 = y2 + blockHeight / 2
-    
+
+    // TODO: improve this logic somehow
     if (y2 < y1 && y1 < y2 + blockHeight) {
       if (cx1 < cx2)
         return 'right'
@@ -113,23 +121,25 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
     .debug(R.compose(console.log, R.prop('dir')))
     .map(R.prop('block'))
 
-  const ballSink$ = ball({
+  const update$ = xs.merge(accelerate$, slowDown$,
+    reset$.mapTo(R.merge(R.__, ballProps)),
+  )
+
+  const ballSinks = ball({
     pause: pause$,
+    update: update$,
     collision: collision$,
     props: ballProps
   })
-  const ball$ = ballSink$.DOM
 
-  const blocksSink$ = blocks({
+  const blockSinks = blocks({
     destroy: destroy$,
-    reset: reset$,
+    reset: reset$.startWith(null),
   })
 
-  const block$ = blocksSink$.DOM
-
   const state$ = xs.combine(
-    ballSink$.state,
-    blocksSink$.state,
+    ballSinks.state,
+    blockSinks.state,
     mouse$,
     pause$
   ).map(R.zipObj(['ball', 'blocks', 'mouse', 'pause']))
@@ -145,7 +155,7 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
 
   const debug$ = debugView(printedState$)
 
-  const vtree$ = xs.combine(ball$, block$, debug$)
+  const vtree$ = xs.combine(ballSinks.DOM, blockSinks.DOM, debug$)
     .map(div.bind(null, '.' + boardClass))
   return {
     DOM: vtree$,

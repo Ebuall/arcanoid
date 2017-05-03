@@ -42,7 +42,7 @@ function ball(sources: BallSources) {
         return R.over(R.lensProp('dir'), R.subtract(-Math.PI))
     })
 
-  const state$ = xs.merge(move$, rotate$)
+  const state$ = xs.merge(move$, rotate$, sources.update)
     .fold((state, reducer: Reducer<BallState>) => reducer(state), sources.props)
 
   const vtree$ = state$.map(({ pos }) => view(pos))

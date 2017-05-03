@@ -15,9 +15,12 @@ export default function debugView(state$: Stream<any>) {
       state.blocks.map(JSON.stringify).join('\n'),
       '\nmouse: ',
       JSON.stringify(state.mouse),
-      '\npress escape to reset',
-      '\npress space to start/pause',
       state.pause ? '\nPAUSED' : '',
+      '\n----------------------------------',
+      '\nKeys: ',
+      '\n  Escape  reset',
+      '\n  Space   start/pause',
+      '\n  A/S     speed++/--',
     ])
   )
 }

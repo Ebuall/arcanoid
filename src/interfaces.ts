@@ -15,7 +15,8 @@ export type CollObj = {
 }
 
 export type BallSources = {
-  pause: Stream<boolean>
+  pause: Stream<boolean>,
+  update: Stream<Reducer<BallState>>,
   collision: Stream<CollObj>,
   props: BallState
 }
