@@ -19,6 +19,7 @@ module.exports = {
   },
   devServer: {
     contentBase: './public',
+    disableHostCheck: true,
     historyApiFallback: true,
     stats: 'errors-only',
     port: 8000
