@@ -8,6 +8,15 @@ export function setPosition(x: number, y: number) {
   }
 }
 
+export function setPositionHook(x: number, y: number) {
+  return {
+    hook: {
+      insert: setPosition(x, y),
+      update: setPosition(x, y)
+    }
+  }
+}
+
 export function pretty(...args: any[]) {
   console.log(JSON.stringify(args, null, 2))
 }

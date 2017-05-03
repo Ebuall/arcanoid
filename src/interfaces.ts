@@ -10,7 +10,8 @@ export type BallState = {
 
 export type CollObj = {
   pos: Coord,
-  dir: string
+  dir: string,
+  block?: Coord
 }
 
 export type BallSources = {
@@ -18,6 +19,13 @@ export type BallSources = {
   collision: Stream<CollObj>,
   props: BallState
 }
+
+export type BlockSources = {
+  destroy: Stream<Coord>,
+  reset: Stream<any>
+}
+
+export type Blocks = Coord[][]
 
 export type MainState = {
   ball: BallState,

@@ -1,15 +1,15 @@
-import xs from 'xstream'
+import xs, { Stream } from 'xstream'
 import { div, VNode } from '@cycle/dom'
 import { style } from 'typestyle'
 import * as R from 'ramda'
-import { Coord } from "../interfaces"
-import { setPosition } from "../helpers"
+import { Coord, BlockSources, Reducer, Blocks } from "../interfaces"
+import { setPositionHook } from "../helpers"
 
 const boardHeight = 500
 const blockHeight = 20
 const blockWidth = 33.33
 
-function view(blocks: Coord[]) {
+function view(blocks$: Stream<Blocks>) {
   const blockStyle = style({
     backgroundColor: '#0af',
     border: '1px solid black',
@@ -18,12 +18,10 @@ function view(blocks: Coord[]) {
     position: 'absolute',
     width: blockWidth + 'px'
   })
-  function block(pos: Coord) {
-    return div('.' + blockStyle, {
-      hook: { insert: setPosition(pos[0], pos[1]) }
-    })
+  function block([x, y]: Coord) {
+    return div('.' + blockStyle, setPositionHook(x, y))
   }
-  return div(blocks.map(block))
+  return blocks$.map(state => div(R.unnest(state).map(block)))
 }
 
 function generateBlocks(
@@ -41,14 +39,15 @@ function generateBlocks(
     .map(genLine)
 }
 
-function blocks() {
-  const state = generateBlocks()
-  const state$ = xs.of(state)
+function blocks(sources: BlockSources) {
+  const destroy$ = sources.destroy.map(
+    R.compose(R.map, R.compose(R.reject, R.equals)))
+  const reset$ = sources.reset.mapTo(R.nAry(0, generateBlocks))
 
+  const state$ = xs.merge(destroy$, reset$)
+    .fold((state: Blocks, reducer: Reducer<Blocks>) => reducer(state), [])
 
-  const vtree = div(generateBlocks().map(view))
-
-  const vtree$ = state$.map(state => div(state.map(view)))
+  const vtree$ = view(state$)
   return {
     DOM: vtree$,
     state: state$

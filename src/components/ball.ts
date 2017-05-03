@@ -4,7 +4,7 @@ import { div, VNode } from '@cycle/dom'
 import { style } from 'typestyle'
 import { Coord, BallSources, BallState, Reducer } from '../interfaces'
 import * as R from 'ramda'
-import { setPosition } from "../helpers"
+import { setPositionHook } from "../helpers"
 
 function view([x, y]: Coord) {
   const className = style({
@@ -15,9 +15,7 @@ function view([x, y]: Coord) {
     width: '20px',
     zIndex: 1,
   })
-  return div('.' + className, {
-    hook: { update: setPosition(x, y) }
-  })
+  return div('.' + className, setPositionHook(x, y))
 }
 
 function ball(sources: BallSources) {
