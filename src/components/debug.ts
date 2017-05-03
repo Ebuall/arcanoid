@@ -12,7 +12,10 @@ export default function debugView(state$: Stream<any>) {
       'ball: ',
       JSON.stringify(state.ball, null, 2),
       '\nblocks:\n',
-      state.blocks.map(JSON.stringify).join('\n')
+      state.blocks.map(JSON.stringify).join('\n'),
+      '\nmouse: ',
+      JSON.stringify(state.mouse),
+      state.pause ? '\nPAUSED' : ''
     ])
   )
 }

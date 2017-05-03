@@ -4,6 +4,7 @@ import { div, VNode } from '@cycle/dom'
 import { style } from 'typestyle'
 import { Coord, BallSources, BallState, Reducer } from '../interfaces'
 import * as R from 'ramda'
+import { setPosition } from "../helpers"
 
 function view([x, y]: Coord) {
   const className = style({
@@ -15,13 +16,7 @@ function view([x, y]: Coord) {
     zIndex: 1,
   })
   return div('.' + className, {
-    hook: {
-      update: (v: VNode) => {
-        const elem = v.elm as HTMLElement
-        elem.style.bottom = y + 'px'
-        elem.style.left = x + 'px'
-      }
-    }
+    hook: { update: setPosition(x, y) }
   })
 }
 
@@ -33,11 +28,13 @@ function ball(sources: BallSources) {
     ]
     return R.assoc('pos', newPos, state)
   }
-  const move$ = xs.periodic(33).mapTo(move)
+  const move$ = sources.pause
+    .map(b => b
+      ? xs.never()
+      : xs.periodic(33).mapTo(move))
+    .flatten()
 
   const rotate$ = sources.collision
-    .debug(R.compose(console.log, R.prop('pos')))
-    // .debug(_ => { debugger; })
     .map(({ dir }) => {
       if (dir == 'top' || dir == 'bottom')
         return R.over(R.lensProp('dir'), R.negate)

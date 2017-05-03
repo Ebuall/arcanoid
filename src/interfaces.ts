@@ -14,8 +14,14 @@ export type CollObj = {
 }
 
 export type BallSources = {
+  pause: Stream<boolean>
   collision: Stream<CollObj>,
   props: BallState
+}
+
+export type MainState = {
+  ball: BallState,
+  blocks: number[][][]
 }
 
 export type Reducer<T> = (obj: T) => T
