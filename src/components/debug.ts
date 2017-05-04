@@ -1,18 +1,34 @@
-import { pre, div } from "@cycle/dom"
+import { pre } from "@cycle/dom"
 import { Stream } from "xstream"
 import { style } from "typestyle"
+import * as R from "ramda"
+import { fix2 } from "../helpers"
+import { MainState } from "../interfaces";
 
 const offset = style({
   marginLeft: '550px'
 })
 
-export default function debugView(state$: Stream<any>) {
-  return state$.map(state =>
+const dirInPi = R.over(R.lensProp('dir'), R.compose(
+  R.flip(R.concat)('π'),
+  fix2,
+  R.flip(R.divide)(Math.PI)
+))
+const map3 = R.compose(R.map, R.map, R.map)
+
+function debugView(state$: Stream<MainState>) {
+  const printedState$ = state$
+    .map(R.evolve<MainState>({
+      ball: dirInPi,
+      blocks: map3(Math.round)
+    }))
+
+  return printedState$.map(state =>
     pre('.' + offset, [
       'ball: ',
       JSON.stringify(state.ball, null, 2),
       '\nblocks:\n',
-      state.blocks.map(JSON.stringify).join('\n'),
+      state.blocks.map(R.unary(JSON.stringify)).join('\n'),
       '\nmouse: ',
       JSON.stringify(state.mouse),
       state.pause ? '\nPAUSED' : '',
@@ -24,3 +40,5 @@ export default function debugView(state$: Stream<any>) {
     ])
   )
 }
+
+export default debugView

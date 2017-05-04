@@ -15,14 +15,15 @@ export type CollObj = {
 }
 
 export type BallSources = {
-  pause: Stream<boolean>,
-  update: Stream<Reducer<BallState>>,
-  collision: Stream<CollObj>,
+  pause?: Stream<boolean>,
+  update?: Stream<Reducer<BallState>>,
+  keys?: (s: string, event?: string) => Stream<Event>,
+  collisions: Stream<CollObj>,
   props: BallState
 }
 
 export type BlockSources = {
-  destroy: Stream<Coord>,
+  collisions: Stream<CollObj>,
   reset: Stream<any>
 }
 
@@ -30,7 +31,9 @@ export type Blocks = Coord[][]
 
 export type MainState = {
   ball: BallState,
-  blocks: number[][][]
+  blocks: number[][][],
+  mouse: Coord,
+  pause: boolean
 }
 
 export type Reducer<T> = (obj: T) => T
