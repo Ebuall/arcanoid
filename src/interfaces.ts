@@ -37,3 +37,5 @@ export type MainState = {
 }
 
 export type Reducer<T> = (obj: T) => T
+
+export type DOMKeys = (s: string, event?: string) => Stream<Event>

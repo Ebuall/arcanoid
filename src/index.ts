@@ -7,6 +7,7 @@ import ball from './components/ball'
 import blocks from './components/blocks'
 import debugView from "./components/debug"
 import board from './components/board'
+import player from './components/player'
 import findCollisions from './collisionDetection'
 import { MainState } from './interfaces'
 
@@ -48,17 +49,25 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
     reset: reset$.startWith(null),
   })
 
+  const playerSinks = player({
+    keys,
+    reset: reset$
+  })
+
   const state$ = xs.combine(
     ballSinks.state,
     blockSinks.state,
+    playerSinks.state,
     mouse$,
     pause$
-  ).map(R.zipObj(['ball', 'blocks', 'mouse', 'pause'])) as Stream<MainState>
+  ).map(R.zipObj(
+    ['ball', 'blocks', 'player', 'mouse', 'pause'])) as Stream<MainState>
 
   const debug$ = debugView(state$)
   const vtree$ = xs.combine(
     ballSinks.DOM,
     blockSinks.DOM,
+    playerSinks.DOM,
     debug$
   ).map(board)
 

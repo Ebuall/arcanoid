@@ -1,4 +1,5 @@
 import { VNode } from "@cycle/dom";
+import { Reducer } from "./interfaces";
 
 function setPosition(x: number, y: number) {
   return (v: VNode) => {
@@ -25,3 +26,6 @@ export function fix2(x: number): string {
   return Number.prototype.toFixed.call(x, 2)
 }
 
+export function updateState<T>(state: T, fn: Reducer<T>): T {
+  return fn(state)
+}
