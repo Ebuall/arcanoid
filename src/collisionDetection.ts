@@ -45,12 +45,11 @@ const findBlockColl = (ball: Coord, blocks: Coord[][]) =>
     R.find(blockColl(ball)))) as Coord
 
 const findAngle = ([x1, y1]: Coord, [x2, y2]: Coord) => {
-  const [cx1, cy1] = findCenter([x1, y2], ballRadius)
+  const [cx1, cy1] = findCenter([x1, y1], ballRadius)
   const cx2 = x2 + blockWidth / 2
   const cy2 = y2 + blockHeight / 2
 
-  // TODO: improve this logic somehow
-  if (y2 < y1 && y1 < y2 + blockHeight) {
+  if (y2 < cy1 && cy1 < y2 + blockHeight) {
     if (cx1 < cx2)
       return 'right'
     else if (cx1 > cx2)
