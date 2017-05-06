@@ -49,7 +49,7 @@ function ball(sources: BallSources) {
   const move$ = sources.pause
     .map(b => b
       ? xs.never()
-      : xs.periodic(33).mapTo(actions.move))
+      : xs.periodic(5).mapTo(actions.move))
     .flatten()
 
   const rotate$ = sources.collisions.map(actions.rotate)

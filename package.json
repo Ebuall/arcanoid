@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/ramda": "github:types/npm-ramda",
     "ts-loader": "^2.0.3",
-    "typescript": "2.2.2",
+    "typescript": "2.3.2",
     "webpack": "^2.4.1",
     "webpack-dev-server": "^2.4.4"
   }
