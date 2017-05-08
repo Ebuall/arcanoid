@@ -43,7 +43,7 @@ function ball(sources: BallSources) {
     .mapTo(R.over(R.lensProp('speed'), R.inc))
   const slowDown$ = sources.keys('KeyS')
     .mapTo(R.over(R.lensProp('speed'), R.dec))
-  const reset$ = sources.keys('Escape', 'keyup')
+  const reset$ = sources.reset
     .mapTo(R.merge(R.__, sources.props))
 
   const move$ = sources.pause

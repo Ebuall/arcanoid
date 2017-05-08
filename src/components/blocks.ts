@@ -40,9 +40,9 @@ function generateBlocks(
 }
 
 function blocks(sources: BlockSources) {
-  const destroy$ = sources.collisions.filter(_ => !!_.block)
-    .debug(R.compose(console.log, R.prop('dir')))
-    .map(R.prop('block'))
+  const destroy$ = sources.collisions
+    // .debug(R.compose(console.log, R.prop('dir')))
+    .map(R.prop('targetPos'))
     .map(R.compose(R.map, R.compose(R.reject, R.equals)))
 
   const reset$ = sources.reset.mapTo(R.nAry(0, generateBlocks))

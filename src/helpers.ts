@@ -1,5 +1,8 @@
-import { VNode } from "@cycle/dom";
-import { Reducer } from "./interfaces";
+import { VNode } from "@cycle/dom"
+import { Reducer } from "./interfaces"
+import { Stream } from "xstream"
+import sampleCombine from 'xstream/extra/sampleCombine'
+
 
 function setPosition(x: number, y: number) {
   return (v: VNode) => {
@@ -29,3 +32,10 @@ export function fix2(x: number): string {
 export function updateState<T>(state: T, fn: Reducer<T>): T {
   return fn(state)
 }
+
+
+export const when = (bool$: Stream<boolean>) =>
+  <T>(v$: Stream<T>): Stream<T> =>
+    v$.compose(sampleCombine(bool$))
+      .filter(([v, b]) => b)
+      .map(([v, b]) => v)

@@ -24,12 +24,8 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
     sources.DOM.select('document').events(event)
       .filter(R.propEq('code', key))
 
-  const reset$ = keys('Escape', 'keyup')
-  const pause$ = xs.merge(
-    keys('Space').mapTo(R.not),
-    reset$.mapTo(R.T)
-  ).fold<boolean>(updateState, true)
-
+  const space$ = keys('Space')
+  const hardReset$ = keys('Escape', 'keyup')
   const mouse$ = sources.DOM.select('document').events('mousemove')
     .map((ev: MouseEvent) => [ev.clientX - 13, 513 - ev.clientY])
     .startWith([0, 0])
@@ -37,43 +33,72 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
   const collision$ = sources.state
     .map(findCollisions)
     .filter(_ => !!_)
-    .compose(dropRepeats(R.eqProps('dir')))  // TODO: improve dropRepeats logic
-    // .compose(throttle(100))
-  
+    .compose(dropRepeats(R.eqProps('dir')))
+
+  const softReset$ = collision$.filter(c => c.target == 'ground')
+  const reset$ = xs.merge(hardReset$, softReset$)
+  const pause$ = xs.merge(
+    space$.mapTo(R.not),
+    reset$.mapTo(R.T)
+  ).fold<boolean>(updateState, true)
+
   const ballSinks = ball({
     pause: pause$,
+    reset: reset$,
     keys,
     collisions: collision$,
     props: ballProps
   })
 
   const blockSinks = blocks({
-    collisions: collision$,
-    reset: reset$.startWith(null),
+    collisions: collision$.filter(c => c.target == 'block'),
+    reset: hardReset$.startWith(null),
   })
 
   const playerSinks = player({
     keys,
-    reset: reset$
+    pause: pause$,
+    softReset: softReset$,
+    hardReset: hardReset$
   })
+
+  const init$ = xs.merge(
+    reset$.mapTo(R.T),
+    pause$.filter(R.not).mapTo(R.F)
+  ).fold(updateState, true)
 
   const state$ = xs.combine(
     ballSinks.state,
     blockSinks.state,
     playerSinks.state,
     mouse$,
-    pause$
-  ).map(R.zipObj(
-    ['ball', 'blocks', 'player', 'mouse', 'pause'])) as Stream<MainState>
+    pause$,
+    init$
+  ).map(R.zipObj([
+    'ball',
+    'blocks',
+    'player',
+    'mouse',
+    'pause',
+    'init'])) as Stream<MainState>
 
   const debug$ = debugView(state$)
-  const vtree$ = xs.combine(
+
+  const frames = xs.combine(
     ballSinks.DOM,
     blockSinks.DOM,
     playerSinks.DOM,
-    debug$)
-    .map(board)
-    .compose(throttle(16))
+    debug$
+  ).map(board)
+
+  const importantFrames = pause$
+    .mapTo(frames.take(2))
+    .flatten()
+
+  const vtree$ = xs.merge(
+    importantFrames,
+    frames.compose(throttle(16))
+  )
 
   return {
     DOM: vtree$,

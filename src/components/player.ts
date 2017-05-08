@@ -2,19 +2,8 @@ import xs, { Stream } from 'xstream'
 import * as R from 'ramda'
 import { style } from 'typestyle'
 import { div, VNode } from '@cycle/dom'
-import { DOMKeys } from "../interfaces"
 import { updateState } from "../helpers"
-
-type PlayerSources = {
-  keys: DOMKeys,
-  reset: Stream<any>
-}
-
-interface PlayerState {
-  lifes?: number,
-  pos: number,
-  width?: number
-}
+import { PlayerState, PlayerSources, Reducer } from "../interfaces"
 
 type Fn = (n: number) => number
 
@@ -49,14 +38,10 @@ function view(state$: Stream<PlayerState>) {
 }
 
 const subtract = (x: number) => (y: number) => y - x
-const bounded = (fn: Fn, width: number) => (x: number) => {
-  const value = fn(x)
-  if (value > 500 - width || value < 0) return x
-  return value
-}
-// const move = (fn: Fn) => R.over(R.lensProp('pos'), bounded(fn))
 const move = (fn: Fn) => (state: PlayerState) =>
-  R.over(R.lensProp('pos'), bounded(fn, state.width), state)
+  R.over(R.lensProp('pos'),
+    R.compose(R.clamp(0, 500 - state.width), fn),
+    state)
 
 function player(sources: PlayerSources) {
   const moveKey = (key: string, moveFn: Fn) => {
@@ -67,13 +52,18 @@ function player(sources: PlayerSources) {
     const keyUp = sources.keys(key, 'keyup')
       .mapTo(xs.empty())
 
-    return xs.merge(keyDown, keyUp).flatten()
+    return xs.merge(keyDown, keyUp)
+      .flatten() as Stream<Reducer<PlayerState>>
   }
 
   const left = moveKey('ArrowLeft', subtract(5))
   const right = moveKey('ArrowRight', R.add(5))
+  const softReset$ = sources.softReset
+    .mapTo(R.assoc('pos', initialState.pos))
+  const hardReset$ = sources.hardReset
+    .mapTo(R.always(initialState))
 
-  const state$ = xs.merge(left, right)
+  const state$ = xs.merge(left, right, softReset$, hardReset$)
     .fold<PlayerState>(updateState, initialState)
 
   const vtree$ = view(state$)

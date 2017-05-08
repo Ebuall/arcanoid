@@ -20,26 +20,26 @@ function debugView(state$: Stream<MainState>) {
   const printedState$ = state$
     .map(R.evolve<MainState>({
       ball: dirInPi,
-      blocks: map3(Math.round)
+      // blocks: map3(Math.round)
     }))
 
   return printedState$.map(state =>
     pre('.' + offset,
-      [JSON.stringify(R.omit('blocks', state), null, 2),  
-      //   'ball: ',
-      //   JSON.stringify(state.ball, null, 2),
+      [JSON.stringify(R.omit('blocks', state), null, 2),
+        //   'ball: ',
+        //   JSON.stringify(state.ball, null, 2),
         // '\nblocks:\n',
         // state.blocks.map(R.unary(JSON.stringify)).join('\n'),
-      //   '\nmouse: ',
-      //   JSON.stringify(state.mouse),
-      //   state.pause ? '\nPAUSED' : '',
+        //   '\nmouse: ',
+        //   JSON.stringify(state.mouse),
+        //   state.pause ? '\nPAUSED' : '',
         '\n----------------------------------',
         '\nKeys: ',
         '\n  Escape  reset',
         '\n  Space   start/pause',
         '\n  A/S     speed++/--',
       ])
-    )
+  )
 }
 
 export default debugView

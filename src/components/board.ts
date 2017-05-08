@@ -11,13 +11,13 @@ const boardClass = style({
     '&:after': {
       border: '5px solid black',
       borderTop: 'none',
-      bottom: '-99px',
+      bottom: '-14px',
       boxSizing: 'content-box',
       content: '"yobtvoyu maaat"',
       display: 'block',
       height: '10px',
-      left: '-5px',
-      position: 'relative',
+      left: '-4.8px',
+      position: 'absolute',
       width: '500px',
     }
   }

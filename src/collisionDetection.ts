@@ -1,5 +1,5 @@
 import * as R from 'ramda'
-import { Coord, MainState, CollObj } from "./interfaces"
+import { Coord, MainState, CollObj, CollTarget } from "./interfaces"
 
 const blockHeight = 20
 const blockWidth = 33.33
@@ -59,13 +59,32 @@ const findAngle = ([x1, y1]: Coord, [x2, y2]: Coord) => {
   return 'top'
 }
 
-function findCollisions({ ball, blocks }: MainState): CollObj {
+const findPaddleColl = ([x, y]: Coord, z: number, w: number): number => {
+
+  return
+}
+
+function findCollisions({ ball, blocks, player }: MainState): CollObj {
+  let target: CollTarget
+  let targetPos: number | Coord
   let dir = borderColl(ball.pos[0], ball.pos[1])
-  const block = findBlockColl(ball.pos, blocks)
-  if (!dir && block) {
-    dir = findAngle(ball.pos, block)
+  if (dir == 'bottom')
+    target = 'ground'
+  else if (dir !== undefined)
+    target = 'wall'
+  else {
+    targetPos = findPaddleColl(ball.pos, player.pos, player.width)
+    if (targetPos)
+      target = 'paddle'
+    else {
+      targetPos = findBlockColl(ball.pos, blocks)
+      if (targetPos) {
+        dir = findAngle(ball.pos, targetPos)
+        target = 'block'
+      }
+    }
   }
-  return dir ? { pos: ball.pos, dir, block } : null
+  return target ? { pos: ball.pos, dir, target, targetPos } : null
 }
 
 export default findCollisions

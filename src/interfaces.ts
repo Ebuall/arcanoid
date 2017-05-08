@@ -8,18 +8,20 @@ export type BallState = {
   speed: number,
 }
 
-export type CollObj = {
-  pos: Coord,
-  dir: string,
-  block?: Coord
-}
-
 export type BallSources = {
   pause?: Stream<boolean>,
-  update?: Stream<Reducer<BallState>>,
+  reset?: Stream<any>,
   keys?: (s: string, event?: string) => Stream<Event>,
   collisions: Stream<CollObj>,
   props: BallState
+}
+
+export type CollTarget = 'block' | 'ground' | 'paddle' | 'wall'
+export interface CollObj {
+  pos: Coord,
+  dir: string,
+  target: CollTarget
+  targetPos?: Coord | number
 }
 
 export type BlockSources = {
@@ -29,9 +31,23 @@ export type BlockSources = {
 
 export type Blocks = Coord[][]
 
+export type PlayerSources = {
+  keys: DOMKeys,
+  pause: Stream<boolean>,
+  softReset: Stream<any>,
+  hardReset: Stream<any>,  
+}
+
+export type PlayerState = {
+  lifes?: number,
+  pos: number,
+  width?: number
+}
+
 export type MainState = {
   ball: BallState,
   blocks: number[][][],
+  player: PlayerState,
   mouse: Coord,
   pause: boolean
 }
