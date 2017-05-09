@@ -56,10 +56,13 @@ function player(sources: PlayerSources) {
       .flatten() as Stream<Reducer<PlayerState>>
   }
 
-  const left = moveKey('ArrowLeft', subtract(5))
-  const right = moveKey('ArrowRight', R.add(5))
+  const left = moveKey('ArrowLeft', subtract(7))
+  const right = moveKey('ArrowRight', R.add(7))
   const softReset$ = sources.softReset
-    .mapTo(R.assoc('pos', initialState.pos))
+    .mapTo(R.evolve({
+      pos: R.always(initialState.pos),
+      lives: R.dec
+    }))
   const hardReset$ = sources.hardReset
     .mapTo(R.always(initialState))
 

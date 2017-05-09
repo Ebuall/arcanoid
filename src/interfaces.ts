@@ -39,7 +39,7 @@ export type PlayerSources = {
 }
 
 export type PlayerState = {
-  lifes?: number,
+  lives?: number,
   pos: number,
   width?: number
 }

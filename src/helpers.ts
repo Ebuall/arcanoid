@@ -39,3 +39,14 @@ export const when = (bool$: Stream<boolean>) =>
     v$.compose(sampleCombine(bool$))
       .filter(([v, b]) => b)
       .map(([v, b]) => v)
+
+export function printLivesFromVNode(o: any) {
+    try {
+      console.log(
+        JSON.parse(o.children[3]
+          .children[0].text)
+          .player.lives)
+    }
+    catch (e) { }
+  }
+  

@@ -59,29 +59,29 @@ const findAngle = ([x1, y1]: Coord, [x2, y2]: Coord) => {
   return 'top'
 }
 
-const findPaddleColl = ([x, y]: Coord, z: number, w: number): number => {
-
-  return
-}
+const findPaddleColl =
+  ([x, _]: Coord, paddleX: number, width: number): number => {
+    const cx = x + ballRadius
+    const hw = width / 2
+    const center = paddleX + hw
+    return Math.abs(center - cx) < hw + 5 ? paddleX : null
+  }
 
 function findCollisions({ ball, blocks, player }: MainState): CollObj {
   let target: CollTarget
   let targetPos: number | Coord
   let dir = borderColl(ball.pos[0], ball.pos[1])
-  if (dir == 'bottom')
-    target = 'ground'
-  else if (dir !== undefined)
+  if (dir == 'bottom') {
+    if ((targetPos = findPaddleColl(ball.pos, player.pos, player.width)) !== null)
+      target = 'paddle'
+    else
+      target = 'ground'
+  } else if (dir !== undefined)
     target = 'wall'
   else {
-    targetPos = findPaddleColl(ball.pos, player.pos, player.width)
-    if (targetPos)
-      target = 'paddle'
-    else {
-      targetPos = findBlockColl(ball.pos, blocks)
-      if (targetPos) {
-        dir = findAngle(ball.pos, targetPos)
-        target = 'block'
-      }
+    if (targetPos = findBlockColl(ball.pos, blocks)) {
+      dir = findAngle(ball.pos, targetPos)
+      target = 'block'
     }
   }
   return target ? { pos: ball.pos, dir, target, targetPos } : null

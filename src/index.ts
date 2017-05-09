@@ -1,31 +1,56 @@
 import xs, { Stream } from 'xstream'
 import dropRepeats from 'xstream/extra/dropRepeats'
 import throttle from 'xstream/extra/throttle'
+import debounce from 'xstream/extra/debounce'
 import run from '@cycle/run'
-import { makeDOMDriver, DOMSource } from '@cycle/dom'
+import { makeDOMDriver, DOMSource, div, VNode } from '@cycle/dom'
 import * as R from 'ramda'
 import ball from './components/ball'
 import blocks from './components/blocks'
 import debugView from "./components/debug"
 import board from './components/board'
 import player from './components/player'
+import gameOverScreen from './components/gameOverScreen'
 import findCollisions from './collisionDetection'
 import { MainState } from './interfaces'
-import { updateState } from "./helpers"
+import { updateState, when, printLivesFromVNode } from "./helpers"
 
+const DEBUG = true
 const ballProps = {
   pos: [240, 0],
   dir: Math.PI / 4,
-  speed: 1
+  speed: 2
 }
+const zeroBlocks = R.compose(
+  R.equals(0),
+  R.prop('length'),
+  R.flatten,
+  R.prop('blocks'))
+const gameOverCondition = R.cond([
+  [R.pathEq(['player', 'lives'], 0), R.T],
+  [zeroBlocks, R.T],
+  [R.T, R.F]
+]);
+(<any>window).goc = gameOverCondition
+// const st = {player: {lives: 0}, blocks: [[],[],[],[]]}
 
 function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
+  const gameOver$ = sources.state
+    .map(gameOverCondition)
+    .compose(dropRepeats())
+    .startWith(false)
+  const whenGameIsNotOver = when(gameOver$.map(R.not))
+
   const keys = (key: string, event = 'keypress') =>
     sources.DOM.select('document').events(event)
       .filter(R.propEq('code', key))
+      .compose(whenGameIsNotOver)
 
   const space$ = keys('Space')
-  const hardReset$ = keys('Escape', 'keyup')
+  const resumeKey$ = sources.DOM.select('document').events('keyup')
+    .filter(R.propSatisfies(p => p == 'Escape' || p == 'Space', 'code'))
+    .compose(when(gameOver$))
+  const hardReset$ = xs.merge(keys('Escape', 'keyup'), resumeKey$)
   const mouse$ = sources.DOM.select('document').events('mousemove')
     .map((ev: MouseEvent) => [ev.clientX - 13, 513 - ev.clientY])
     .startWith([0, 0])
@@ -34,6 +59,8 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
     .map(findCollisions)
     .filter(_ => !!_)
     .compose(dropRepeats(R.eqProps('dir')))
+  // .debug(R.compose(console.log, R.join(' \t'), R.reverse,
+  //   R.values, R.omit(['pos', 'targetPos'])))
 
   const softReset$ = collision$.filter(c => c.target == 'ground')
   const reset$ = xs.merge(hardReset$, softReset$)
@@ -65,7 +92,7 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
   const init$ = xs.merge(
     reset$.mapTo(R.T),
     pause$.filter(R.not).mapTo(R.F)
-  ).fold(updateState, true)
+  ).fold<boolean>(updateState, true)
 
   const state$ = xs.combine(
     ballSinks.state,
@@ -91,11 +118,16 @@ function main(sources: { DOM: DOMSource, state: Stream<MainState> }) {
     debug$
   ).map(board)
 
-  const importantFrames = pause$
-    .mapTo(frames.take(2))
+  const importantFrames = xs.merge(
+    hardReset$,
+    pause$.compose(whenGameIsNotOver)
+  )
+    .mapTo(frames.take(12 /* wtf, needs fix */))
+    //      debounce doesn't help, not sure why
     .flatten()
 
   const vtree$ = xs.merge(
+    gameOverScreen(gameOver$.filter(l => l)),
     importantFrames,
     frames.compose(throttle(16))
   )
